@@ -50,11 +50,10 @@ class WaveformGen:
         self.ao_task = None
 
         self.ao_counter = 0
-        self.ai_counter = 1
+        self.ai_counter = 0
 
         self.frames = []
         self.reading_image_callback = None
-
         # Could use a clock to drive both tasks, but not sure if helps at all?
         # sample_clk_task = nidaqmx.Task()
         # self.sample_clk_task = sample_clk_task
@@ -84,17 +83,16 @@ class WaveformGen:
         return np.arange(self.samples_per_refresh) / self.sample_rate
 
     def init_ai(self):
-        ai_task = nidaqmx.Task()
-        self.ai_task = ai_task
+        self.ai_task = nidaqmx.Task()
         for ch in self.ai_channels:
-            ai_task.ai_channels.add_ai_voltage_chan(self.devname + ch, **self.ai_args)
+            self.ai_task.ai_channels.add_ai_voltage_chan(self.devname + ch, **self.ai_args)
         self.read_buffer = np.zeros((len(self.ai_channels), self.samples_per_refresh), dtype=np.float64)
-        ai_task.timing.cfg_samp_clk_timing(rate=self.sample_rate, sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS)
+        self.ai_task.timing.cfg_samp_clk_timing(rate=self.sample_rate, sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS)
         # Configure ai to start only once ao is triggered for simultaneous generation and acquisition:
-        ai_task.triggers.start_trigger.cfg_dig_edge_start_trig("ao/StartTrigger", trigger_edge=nidaqmx.constants.Edge.RISING)
+        self.ai_task.triggers.start_trigger.cfg_dig_edge_start_trig("ao/StartTrigger", trigger_edge=nidaqmx.constants.Edge.RISING)
 
-        ai_task.input_buf_size = self.samples_per_refresh * len(self.ai_channels) * self.buffer_oversize
-        self.reader = stream_readers.AnalogMultiChannelReader(ai_task.in_stream)
+        self.ai_task.in_stream.input_buf_size = self.samples_per_refresh * len(self.ai_channels) * self.buffer_oversize
+        self.reader = stream_readers.AnalogMultiChannelReader(self.ai_task.in_stream)
         self.ai_task.register_every_n_samples_acquired_into_buffer_event(self.samples_per_refresh, self.reading_task_callback)
 
     def init_ao(self):
@@ -232,7 +230,7 @@ class WaveformGen:
 if __name__ == '__main__':
     import time
 
-    gen = WaveformGen(devname='Dev2')
+    gen = WaveformGen(devname='Dev1')
     print(f"FPS: {gen.fps}")
     gen.start()
     time.sleep(4)

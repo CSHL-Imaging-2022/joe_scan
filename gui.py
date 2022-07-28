@@ -176,6 +176,7 @@ class WaveformGUI(QtWidgets.QWidget):
         self.startstopbutton.setText("Start")
         self.startstopbutton.setStyleSheet("")
         [w.setDisabled(False) for w in self.state_toggles_widgets]
+        self.wavegen.stop()
         self.wavegen.close()
 
     # def closeEvent(self, event):
@@ -188,7 +189,7 @@ if __name__ == '__main__':
 
     app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName('Galvo control')
-    wg = WaveformGUI(devname='Dev1')
+    wg = WaveformGUI(devname='Dev2')
     # Makes ctrl-c work, but non-zero exit code
     # import signal
     # signal.signal(signal.SIGINT, signal.SIG_DFL)
