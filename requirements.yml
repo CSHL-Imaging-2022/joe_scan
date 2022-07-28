@@ -2,14 +2,14 @@
 name: joe_scan
 channels:
   - anaconda
-  - conda-forge
+#  - conda-forge
 dependencies:
-  - numpy
-  - matplotlib
-  - scipy
-  - scikit-image
-  - pip
-  - pyqtgraph
+  - anaconda::numpy
+  - anaconda::matplotlib
+  - anaconda::scipy
+  - anaconda::scikit-image
+  - anaconda::pip
   - pip:
      - nidaqmx
      - superqt
+     - pyqtgraph
