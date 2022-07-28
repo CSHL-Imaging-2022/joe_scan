@@ -1,5 +1,5 @@
 #update with:   conda env update --file requirements.yml --prune
-name: galvo_control
+name: joe_scan
 channels:
   - conda-forge
 dependencies:
@@ -9,5 +9,5 @@ dependencies:
   - scikit-image
   - pip
   - pip:
-      nidaqmx
-      superqt
+     - nidaqmx
+     - superqt
