@@ -1,2 +1,6 @@
 import nidaqmx
-device = nidaqmx.system.Device('Dev1')
+system = nidaqmx.system.System.local()
+devices = system.devices
+
+print(system.driver_version)
+print("Devices: ", [d for d in devices])
