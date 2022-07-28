@@ -8,6 +8,7 @@ dependencies:
   - scipy
   - scikit-image
   - pip
+  - pyqtgraph
   - pip:
      - nidaqmx
      - superqt

@@ -1,6 +1,7 @@
 import nidaqmx
 import numpy as np
 from nidaqmx import stream_readers, stream_writers
+from scipy.ndimage import gaussian_filter1d
 
 from matplotlib import pyplot as plt
 
@@ -28,7 +29,7 @@ class WaveformGen:
         self.buffer_oversize = 6  # fold, how much bigger is the buffer than one 'refresh' worth
 
         # AI params
-        self.ai_channels = ['/ai0'] #'/ai1'
+        self.ai_channels = ['/ai0']  # '/ai1'
         self.ai_args = {'min_val': -10,
                         'max_val': 10,
                         'terminal_config': nidaqmx.constants.TerminalConfiguration.RSE}
@@ -168,15 +169,20 @@ class WaveformGen:
         # creates 0 to 1 saw wave
         xraw = ((np.arange(self.samples_per_refresh) + 1) % (self.samples_per_pixel * self.pixels_x)) / (self.samples_per_pixel * self.pixels_x)
         xscaled = (xraw - 0.5) * self.x_amp + self.x_offset
+
+        xscaled = np.pad(np.cumsum(gaussian_filter1d(np.diff(xraw), sigma=10)), (1, 0))
+
         # Y slow scanner
         yscaled = np.linspace(self.y_offset - self.y_amp / 2, self.y_offset + self.y_amp / 2, self.samples_per_refresh)
 
         # laser amplitude control, turn off laser near flyback/edges
         # ampdata = ((unscaled_wave < .95) & (unscaled_wave > .05)).astype(int)
+
         # plt.figure()
         # plt.plot(xscaled)
         # plt.plot(yscaled)
         # plt.show()
+
         stacked_wave = np.vstack((xscaled, yscaled))
         stacked_wave = np.clip(stacked_wave, self.ao_args['min_val'], self.ao_args['max_val'])
         # print(stacked_wave.shape) # shape should be nchannels, nsamples
@@ -213,7 +219,7 @@ class WaveformGen:
 
         self.reader.read_many_sample(self.read_buffer, num_samples, timeout=nidaqmx.constants.WAIT_INFINITELY)
         newframe = self.read_buffer.copy().astype(np.float32).reshape(self.pixels_y, self.pixels_x).T
-        #TODO assuming one channel
+        # TODO assuming one channel
         if self.reading_image_callback:
             self.reading_image_callback(newframe)
         self.frames.append(newframe)
@@ -226,7 +232,7 @@ class WaveformGen:
 if __name__ == '__main__':
     import time
 
-    gen = WaveformGen(devname='Dev1')
+    gen = WaveformGen(devname='Dev2')
     print(f"FPS: {gen.fps}")
     gen.start()
     time.sleep(4)
