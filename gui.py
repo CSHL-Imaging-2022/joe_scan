@@ -169,14 +169,14 @@ class WaveformGUI(QtWidgets.QWidget):
         self.startstopbutton.setText("Scanning")
         self.startstopbutton.setStyleSheet("background-color: red")
         [w.setDisabled(True) for w in self.state_toggles_widgets]
-        self.wavegen.close()
+        self.wavegen.start()
 
     def stop(self):
         self.started = False
         self.startstopbutton.setText("Start")
         self.startstopbutton.setStyleSheet("")
         [w.setDisabled(False) for w in self.state_toggles_widgets]
-        self.wavegen.stop()
+        self.wavegen.close()
 
     # def closeEvent(self, event):
     #     # self.wavegen.close()
