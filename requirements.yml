@@ -1,6 +1,7 @@
 #update with:   conda env update --file requirements.yml --prune
 name: joe_scan
 channels:
+  - anaconda
   - conda-forge
 dependencies:
   - numpy
