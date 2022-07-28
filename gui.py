@@ -188,7 +188,7 @@ if __name__ == '__main__':
 
     app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName('Galvo control')
-    wg = WaveformGUI(devname='Dev2')
+    wg = WaveformGUI(devname='Dev1')
     # Makes ctrl-c work, but non-zero exit code
     # import signal
     # signal.signal(signal.SIGINT, signal.SIG_DFL)
