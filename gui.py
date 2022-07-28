@@ -117,7 +117,6 @@ class WaveformGUI(QtWidgets.QWidget):
         graphics.ui.roiBtn.hide()
         graphics.ui.menuBtn.hide()
         graphics.setMinimumWidth(600)
-        print(graphics)
         graphics.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         vbox_images.addWidget(graphics)
 
@@ -170,8 +169,7 @@ class WaveformGUI(QtWidgets.QWidget):
         self.startstopbutton.setText("Scanning")
         self.startstopbutton.setStyleSheet("background-color: red")
         [w.setDisabled(True) for w in self.state_toggles_widgets]
-        self.wavegen.start()
-        # startask
+        self.wavegen.close()
 
     def stop(self):
         self.started = False
@@ -179,7 +177,6 @@ class WaveformGUI(QtWidgets.QWidget):
         self.startstopbutton.setStyleSheet("")
         [w.setDisabled(False) for w in self.state_toggles_widgets]
         self.wavegen.stop()
-        # stoptask
 
     # def closeEvent(self, event):
     #     # self.wavegen.close()
@@ -191,7 +188,7 @@ if __name__ == '__main__':
 
     app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName('Galvo control')
-    wg = WaveformGUI(devname='Dev1')
+    wg = WaveformGUI(devname='Dev2')
     # Makes ctrl-c work, but non-zero exit code
     # import signal
     # signal.signal(signal.SIGINT, signal.SIG_DFL)
