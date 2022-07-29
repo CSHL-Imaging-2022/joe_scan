@@ -166,9 +166,8 @@ class WaveformGen:
         # X fast scanner
         # creates 0 to 1 saw wave
         xraw = ((np.arange(self.samples_per_refresh) + 1) % (self.samples_per_pixel * self.pixels_x)) / (self.samples_per_pixel * self.pixels_x)
+        xraw = np.pad(np.cumsum(gaussian_filter1d(np.diff(xraw), sigma=10)), (1, 0))
         xscaled = (xraw - 0.5) * self.x_amp + self.x_offset
-
-        xscaled = np.pad(np.cumsum(gaussian_filter1d(np.diff(xraw), sigma=10)), (1, 0))
 
         # Y slow scanner
         yscaled = np.linspace(self.y_offset - self.y_amp / 2, self.y_offset + self.y_amp / 2, self.samples_per_refresh)
