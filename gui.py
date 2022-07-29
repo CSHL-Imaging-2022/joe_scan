@@ -2,6 +2,7 @@ import numpy as np
 import pyqtgraph as pg
 from PyQt5 import QtWidgets, QtCore
 from superqt import QLabeledDoubleRangeSlider, QLabeledDoubleSlider, QLabeledSlider
+from skimage import io
 
 from wavegenbase import WaveformGen
 
@@ -120,6 +121,9 @@ class WaveformGUI(QtWidgets.QWidget):
         graphics.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         vbox_images.addWidget(graphics)
 
+        self.savebutton = QtWidgets.QPushButton("Save last acq")
+        vbox_images.addWidget(self.savebutton)
+
         # self.plotwidget = pg.PlotWidget()
         # vbox.addWidget(self.plotwidget)
 
@@ -135,18 +139,20 @@ class WaveformGUI(QtWidgets.QWidget):
         # self.plotwidget.setLabel('bottom', 'time (sec)')
         #
         #
-        self.state_toggles_widgets = [self.x_amp, self.x_offset, self.y_amp, self.y_offset, self.x_pix, self.samples_per_pixel]
+        self.state_toggles_widgets = [self.x_amp, self.x_offset, self.y_amp, self.y_offset, self.x_pix, self.samples_per_pixel, self.savebutton]
 
         for slider in [self.x_amp, self.x_offset, self.y_amp, self.y_offset, self.x_pix, self.samples_per_pixel]:
             slider.valueChanged.connect(self.update)
         self.startstopbutton.clicked.connect(self.startstop)
         self.zerobutton.clicked.connect(self.wavegen.zero_output)
+        self.savebutton.clicked.connect(self.save)
 
         self.update()
 
         self.setGeometry(50, 50, 1400, 800)
         self.show()
         self.started = False
+        self.lastacqframes = []
 
     def update(self):
         self.wavegen.x_amp = self.x_amp.value()
@@ -176,6 +182,7 @@ class WaveformGUI(QtWidgets.QWidget):
         self.startstopbutton.setText("Start")
         self.startstopbutton.setStyleSheet("")
         [w.setDisabled(False) for w in self.state_toggles_widgets]
+        self.lastacqframes = self.wavegen.frames
         self.wavegen.stop()
         self.wavegen.close()
 
@@ -183,6 +190,11 @@ class WaveformGUI(QtWidgets.QWidget):
     #     # self.wavegen.close()
     #     event.accept()
 
+    def save(self):
+        if self.lastacqframes:
+            filename = 'lastacq.tif'
+            io.imsave(filename, np.stack(self.lastacqframes))
+            print(f"Saved last acq as {filename}")
 
 if __name__ == '__main__':
     import sys

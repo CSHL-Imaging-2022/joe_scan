@@ -127,6 +127,7 @@ class WaveformGen:
             self.ao_task.stop()
         self.ai_counter = 0
         self.ao_counter = 0
+        self.frames = []
 
     def close(self):
         if self.ai_task is not None:
