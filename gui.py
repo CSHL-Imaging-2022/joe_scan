@@ -3,12 +3,16 @@ import pyqtgraph as pg
 from PyQt5 import QtWidgets, QtCore
 from superqt import QLabeledDoubleRangeSlider, QLabeledDoubleSlider, QLabeledSlider
 from skimage import io
+import nidaqmx
 
 from wavegenbase import WaveformGen
 
 
 class WaveformGUI(QtWidgets.QWidget):
-    def __init__(self, devname='Dev1', sample_rate=20000):
+    def __init__(self, devname='auto', sample_rate=20000):
+        if devname == 'auto':  # Take the first attached/running NI box
+            devname = nidaqmx.system.System.local().devices.device_names[0]
+
         super(WaveformGUI, self).__init__()
         self.sample_rate = sample_rate
         self.wavegen = WaveformGen(devname=devname, sample_rate=self.sample_rate)
@@ -90,7 +94,7 @@ class WaveformGUI(QtWidgets.QWidget):
         vbox_control.addSpacing(8)
 
         self.samples_per_pixel = QLabeledSlider(QtCore.Qt.Horizontal)
-        self.samples_per_pixel.setRange(1, 10)
+        self.samples_per_pixel.setRange(1, 20)
         self.samples_per_pixel.setValue(1)
         self.setFocusPolicy(QtCore.Qt.NoFocus)
         vbox_control.addWidget(slider_label("Samples per pixel"))
@@ -102,26 +106,23 @@ class WaveformGUI(QtWidgets.QWidget):
         vbox_control.addWidget(self.fps)
         vbox_control.addSpacing(10)
 
-        # TODO
-        # self.save_check = QtWidgets.QCheckBox()
-        # self.save_check.setText("Save?")
-        # self.save_path = QtWidgets.QFileDialog
-
         vbox_images = QtWidgets.QVBoxLayout()
         hbox.addLayout(vbox_images)
         graphics = pg.ImageView()  # QtWidgets.QGraphicsView()
         graphics.show()
         graphics.setImage(np.random.random((200, 100)))
-        self.wavegen.reading_image_callback = graphics.setImage
+        self.wavegen.reading_image_callback = lambda x: graphics.setImage(x, autoLevels=False, autoHistogramRange=False, levelMode='mono')
         graphics.view.setAspectLocked(True)
         # graphics.view.setRange(xRange=[0, 100], yRange=[0, 100], padding=0)
         graphics.ui.roiBtn.hide()
         graphics.ui.menuBtn.hide()
+        graphics.getHistogramWidget().setHistogramRange(-20, 20)
+        graphics.setLevels(-15, 15)
         graphics.setMinimumWidth(600)
         graphics.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         vbox_images.addWidget(graphics)
 
-        self.savebutton = QtWidgets.QPushButton("Save last acq")
+        self.savebutton = QtWidgets.QPushButton("Save last acquisition")
         vbox_images.addWidget(self.savebutton)
 
         # self.plotwidget = pg.PlotWidget()
@@ -137,8 +138,8 @@ class WaveformGUI(QtWidgets.QWidget):
         # self.plotwidget.addItem(self.plotcurveamp)
         #
         # self.plotwidget.setLabel('bottom', 'time (sec)')
-        #
-        #
+
+
         self.state_toggles_widgets = [self.x_amp, self.x_offset, self.y_amp, self.y_offset, self.x_pix, self.samples_per_pixel, self.savebutton]
 
         for slider in [self.x_amp, self.x_offset, self.y_amp, self.y_offset, self.x_pix, self.samples_per_pixel]:
@@ -192,16 +193,30 @@ class WaveformGUI(QtWidgets.QWidget):
 
     def save(self):
         if self.lastacqframes:
-            filename = 'lastacq.tif'
+            filename = QtWidgets.QFileDialog.getSaveFileName(filter="Tif files (*.tif)")[0]
             io.imsave(filename, np.stack(self.lastacqframes))
+            # msg = QtWidgets.QMessageBox()
+            # msg.setIcon(QtWidgets.QMessageBox.Information)
+            # msg.setText(f"The last acquisition has been saved to: <b> {filename}</b>")
+            # msg.setWindowTitle("Save successful")
+            # msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            # msg.exec_()
             print(f"Saved last acq as {filename}")
+        else:
+            msg = QtWidgets.QMessageBox()
+            msg.setIcon(QtWidgets.QMessageBox.Information)
+            msg.setText(f"Please acquire data before trying to save!")
+            msg.setWindowTitle("No data")
+            msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            msg.exec_()
+
 
 if __name__ == '__main__':
     import sys
 
     app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName('Galvo control')
-    wg = WaveformGUI(devname='Dev2')
+    wg = WaveformGUI(devname='auto')
     # Makes ctrl-c work, but non-zero exit code
     # import signal
     # signal.signal(signal.SIGINT, signal.SIG_DFL)
