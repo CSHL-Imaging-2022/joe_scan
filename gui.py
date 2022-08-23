@@ -17,6 +17,7 @@ class WaveformGUI(QtWidgets.QWidget):
         self.sample_rate = sample_rate
         self.wavegen = WaveformGen(devname=devname, sample_rate=self.sample_rate)
 
+        # Build the QT gui elements
         self.setWindowTitle('Galvo control')
         self.setMinimumSize(1000, 800)
 
@@ -125,23 +126,22 @@ class WaveformGUI(QtWidgets.QWidget):
         self.savebutton = QtWidgets.QPushButton("Save last acquisition")
         vbox_images.addWidget(self.savebutton)
 
+        # Add a plot widget to show the waveforms
         # self.plotwidget = pg.PlotWidget()
-        # vbox.addWidget(self.plotwidget)
+        # hbox.addWidget(self.plotwidget)
+        # self.plotwidget.setLabel('bottom', 'time (sec)')
 
         # self.plotwidget.addLegend(offset=(0., .6))
-        # self.plotwidget.setYRange(-10, 10)
+        # self.plotwidget.setYRange(-5, 5)
         # self.plotcurvex = pg.PlotCurveItem(name="X", pen=pg.mkPen('g', width=3))
         # self.plotwidget.addItem(self.plotcurvex)
         # self.plotcurvey = pg.PlotCurveItem(name="Y", pen=pg.mkPen('b', width=3))
         # self.plotwidget.addItem(self.plotcurvey)
-        # self.plotcurveamp = pg.PlotCurveItem(name="Amplitude", pen=pg.mkPen('r', width=1))
-        # self.plotwidget.addItem(self.plotcurveamp)
-        #
-        # self.plotwidget.setLabel('bottom', 'time (sec)')
 
-
+        # These controls get disabled during scanning
         self.state_toggles_widgets = [self.x_amp, self.x_offset, self.y_amp, self.y_offset, self.x_pix, self.samples_per_pixel, self.savebutton]
 
+        # Connect buttons and sliders to the matching functions
         for slider in [self.x_amp, self.x_offset, self.y_amp, self.y_offset, self.x_pix, self.samples_per_pixel]:
             slider.valueChanged.connect(self.update)
         self.startstopbutton.clicked.connect(self.startstop)
@@ -150,12 +150,13 @@ class WaveformGUI(QtWidgets.QWidget):
 
         self.update()
 
-        self.setGeometry(50, 50, 1400, 800)
+        self.setGeometry(50, 50, 1400, 1000)
         self.show()
         self.started = False
         self.lastacqframes = []
 
     def update(self):
+        # Give updated values to the wavegen object
         self.wavegen.x_amp = self.x_amp.value()
         self.wavegen.x_offset = self.x_offset.value()
         self.wavegen.y_amp = self.y_amp.value()
@@ -164,6 +165,13 @@ class WaveformGUI(QtWidgets.QWidget):
         self.wavegen.samples_per_pixel = self.samples_per_pixel.value()
         self.y_pix_lbl.setText(f"# Y Pixels: {self.wavegen.pixels_y}")
         self.fps.setText(f"Frames per second: {self.wavegen.fps:0.2f}")
+
+        #update wavedisp
+        # samp_times = np.arange(self.wavegen.samples_per_refresh)
+        # self.plotcurvex.setData(samp_time, xdata)
+        # self.plotcurvey.setData(samp_time, ydata)
+        # self.plotcurveamp.setData(samp_time, pcdata)
+        # self.plotwidget.setXRange(0, timeperiod * 1.1)
 
     def startstop(self):
         if self.started:
@@ -184,7 +192,7 @@ class WaveformGUI(QtWidgets.QWidget):
         self.startstopbutton.setStyleSheet("")
         [w.setDisabled(False) for w in self.state_toggles_widgets]
         self.lastacqframes = self.wavegen.frames
-        self.wavegen.stop()
+        self.wavegen.stop()  # Stop the tasks as well, since changing the number of pixels requires regenerating the task buffers
         self.wavegen.close()
 
     # def closeEvent(self, event):
@@ -217,7 +225,4 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName('Galvo control')
     wg = WaveformGUI(devname='auto')
-    # Makes ctrl-c work, but non-zero exit code
-    # import signal
-    # signal.signal(signal.SIGINT, signal.SIG_DFL)
     sys.exit(app.exec_())

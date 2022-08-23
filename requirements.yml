@@ -1,14 +1,14 @@
 #update with:   conda env update --file requirements.yml --prune
 name: joe_scan
 channels:
-  - anaconda
-#  - conda-forge
+  - conda-forge
 dependencies:
-  - anaconda::numpy
-  - anaconda::matplotlib
-  - anaconda::scipy
-  - anaconda::scikit-image
-  - anaconda::pip
+  - python=3.8
+  - numpy
+  - matplotlib
+  - scipy
+  - scikit-image
+  - pip
   - pip:
      - nidaqmx
      - superqt
